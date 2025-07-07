@@ -27,7 +27,8 @@ class aplication():
         self.frame2.place(relx=0.02, rely=0.5, relwidth=0.96, relheight=0.46)
 
     def botões(self):
-        self.limpar = Button(self.frame1, text='Limpar')
+        self.limpar = Button(self.frame1, text='Limpar', bd=2, bg="#EAFEFF", fg="#2C2929",
+                              font=('Arial', 8, 'bold'))
         self.limpar.place(relx=0.2, rely=0.1, relwidth=0.1, relheight=0.15)
         self.buscar = Button(self.frame1, text='Buscar')
         self.buscar.place(relx=0.3, rely=0.1, relwidth=0.1, relheight=0.15)
