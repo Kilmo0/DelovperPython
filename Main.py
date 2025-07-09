@@ -14,8 +14,8 @@ class funcoes():
         self.conn = sqlite3.connect('Clientes.db'); print('Conectando ao banco de dados')
         self.cursor = self.conn.cursor()
     def sqldesconect(self):
-        self.conn.close(); print('Desconectando Banco de Dados')
-    def tabela(self):
+        self.conn.close()
+    def listaclientes(self):
         self.sqlconect(); print("Conectando Banco de Dados")
         ###Tabela
         self.cursor.execute("""
@@ -28,7 +28,51 @@ class funcoes():
             """)
         self.conn.commit(); print('Banco de dados Criado')
         self.sqldesconect() 
+    def addcliente(self):
+        self.codigo = self.codeinput.get()
+        self.nome = self.nomeinput.get()
+        self.telefone = self.teleinput.get()
+        self.cidade = self.cidadeinput.get()
+        #sql
+        self.sqlconect()
+        self.cursor.execute(""" INSERT INTO Clientes (nomecliente, telefone, cidade)
+                            VALUES (?, ?, ?)""", (self.nome, self.telefone, self.cidade))
+        self.conn.commit()
+        self.selecionarlista()
+        self.sqldesconect()
+    def variaveis(self):
+        self.codigo = self.codeinput.get()
+        self.nome = self.nomeinput.get()
+        self.telefone = self.teleinput.get()
+        self.cidade = self.cidadeinput.get()
 
+    def selecionarlista(self):
+        self.list.delete(*self.list.get_children())
+        self.sqlconect()
+        listaa = self.cursor.execute(""" SELECT cod, nomecliente, telefone, cidade FROM Clientes
+                                     ORDER BY nomecliente ASC; """)
+        for i in listaa:
+            self.list.insert("", END, values=i)
+        self.sqldesconect()
+        self.limpartela()                       
+    def cliqueduplo(self, event):
+        self.limpartela()
+        self.list.selection()
+        for n in self.list.selection():
+            col1, col2, col3, col4 = self.list.item(n, 'values')
+            self.codeinput.insert(END, col1)
+            self.nomeinput.insert(END, col2)
+            self.teleinput.insert(END, col3)
+            self.cidadeinput.insert(END, col4)
+    def deletarcliente(self):
+        self.variaveis()
+        self.sqlconect()
+        self.cursor.execute("""DELETE FROM Clientes WHERE COD = ?""", (self.codigo))
+        self.conn.commit()
+        self.sqldesconect()
+        self.limpartela()
+        self.selecionarlista()
+        
 class application(funcoes):
     def __init__(self):
         self.root = root
@@ -36,7 +80,8 @@ class application(funcoes):
         self.frames()
         self.botões()
         self.lista()
-        self.tabela()
+        self.listaclientes()
+        self.selecionarlista()
         self.root.mainloop()
     def tela(self):
         self.root.title('Cadastro de Clientes')
@@ -59,14 +104,14 @@ class application(funcoes):
         self.buscar = Button(self.frame1, text='Buscar', bd=2, bg="#1A2C56", fg="#FFFFFF",
                              font=('Aptos', 8, 'bold'))
         self.buscar.place(relx=0.3, rely=0.1, relwidth=0.1, relheight=0.15)
-        self.procurar = Button(self.frame1, text='Procurar', bd=2, bg='#1A2C56', fg='#FFFFFF',
-                               font=('Aptos', 8, 'bold'))
-        self.procurar.place(relx=0.7, rely=0.1, relwidth=0.1, relheight=0.15)
+        self.apagar = Button(self.frame1, text='Apagar', bd=2, bg='#1A2C56', fg='#FFFFFF',
+                               font=('Aptos', 8, 'bold'), command=self.deletarcliente)
+        self.apagar.place(relx=0.7, rely=0.1, relwidth=0.1, relheight=0.15)
         self.alterar = Button(self.frame1, text='Alterar', bd=2, bg='#1A2C56', fg='#FFFFFF',
                               font=('Aptos', 8, 'bold'))
         self.alterar.place(relx=0.8, rely=0.1, relwidth=0.1, relheight=0.15)
         self.novo = Button(self.frame1, text='Novo', bg='#1A2C56', fg='#ffffff',
-                           font=('Aptos', 8, 'bold'))
+                           font=('Aptos', 8, 'bold'), command=self.addcliente)
         self.novo.place(relx=0.6, rely=0.1, relwidth=0.1, relheight=0.15)
 
         #Labels
@@ -106,5 +151,7 @@ class application(funcoes):
         self.scroll = Scrollbar(self.frame2, orient='vertical')
         self.list.configure(yscroll = self.scroll.set)
         self.scroll.place(relx=0.96, rely=0.01, relwidth=0.04, relheight=0.85)
+        self.list.bind("<ButtonRelease-1>", self.cliqueduplo)
 
 application()
+
