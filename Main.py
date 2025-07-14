@@ -1,8 +1,41 @@
 from tkinter import *
 from tkinter import ttk
 import sqlite3
+from reportlab.pdfgen import canvas
+from reportlab.lib.pagesizes import letter, A4
+from reportlab.pdfbase import pdfmetrics
+from reportlab.pdfbase import ttfonts
+from reportlab.platypus import SimpleDocTemplate, Image
+import webbrowser
+
 
 root = Tk()
+
+class relatorios():
+    def printcliente(self):
+        webbrowser.open(r'C:\Users\EPIC!-PC\Documents\GitHub\DelovperPython\clientes.pdf')
+    def gerarrelcliente(self):
+        self.c = canvas.Canvas('clientes.pdf')
+        self.codigorel = self.codeinput.get()
+        self.nomerel = self.nomeinput.get()
+        self.telerel = self.teleinput.get()
+        self.cidaderel = self.cidadeinput.get()
+        self.c.setFont('Helvetica-Bold', 24)
+        self.c.drawString(200, 790, 'Ficha do Cliente')
+
+        self.c.setFont('Helvetica-Bold', 12)
+        self.c.drawString(50, 700, 'Código: ' + self.codigorel)
+        self.c.drawString(50, 670, 'Nome: ' + self.nomerel)
+        self.c.drawString(50, 640, 'Telefone: ' + self.telerel)
+        self.c.drawString(50, 610, 'Cidade: ' + self.cidaderel)
+
+        self.c.rect(20, 550, 550, 5, fill=True, stroke=True)
+
+        self.c.showPage()
+        self.c.save()
+        self.printcliente()
+
+
 
 class funcoes():
     def limpartela(self):
@@ -45,7 +78,6 @@ class funcoes():
         self.nome = self.nomeinput.get()
         self.telefone = self.teleinput.get()
         self.cidade = self.cidadeinput.get()
-
     def selecionarlista(self):
         self.list.delete(*self.list.get_children())
         self.sqlconect()
@@ -72,8 +104,32 @@ class funcoes():
         self.sqldesconect()
         self.limpartela()
         self.selecionarlista()
+    def alterarcliente(self):
+        self.variaveis()
+        self.sqlconect()
+        self.cursor.execute("""UPDATE Clientes SET nomecliente = ?, telefone = ?, cidade = ?
+                            WHERE cod = ?""", (self.nome, self.telefone, self.cidade, self.codigo))
+        self.conn.commit()
+        self.sqldesconect()
+        self.selecionarlista()
+        self.limpartela()
+    def buscacliente(self):
+        self.sqlconect()
+        self.list.delete(*self.list.get_children())
         
-class application(funcoes):
+        self.nomeinput.insert(END, '%')
+        nome = self.nomeinput.get()
+        self.cursor.execute(
+            """SELECT cod, nomecliente, telefone, cidade FROM Clientes
+            WHERE nomecliente LIKE '%s' ORDER BY nomecliente ASC""" %nome)
+        buscarcliente = self.cursor.fetchall()
+        for i in buscarcliente:
+            self.list.insert("", END, values=i)
+        self.limpartela()
+        self.sqldesconect()
+
+
+class application(funcoes, relatorios):
     def __init__(self):
         self.root = root
         self.tela()
@@ -82,6 +138,7 @@ class application(funcoes):
         self.lista()
         self.listaclientes()
         self.selecionarlista()
+        self.Menus()
         self.root.mainloop()
     def tela(self):
         self.root.title('Cadastro de Clientes')
@@ -102,13 +159,13 @@ class application(funcoes):
                               font=('Aptos', 8, 'bold'), command=self.limpartela)
         self.limpar.place(relx=0.2, rely=0.1, relwidth=0.1, relheight=0.15)
         self.buscar = Button(self.frame1, text='Buscar', bd=2, bg="#1A2C56", fg="#FFFFFF",
-                             font=('Aptos', 8, 'bold'))
+                             font=('Aptos', 8, 'bold'), command=self.buscacliente)
         self.buscar.place(relx=0.3, rely=0.1, relwidth=0.1, relheight=0.15)
         self.apagar = Button(self.frame1, text='Apagar', bd=2, bg='#1A2C56', fg='#FFFFFF',
                                font=('Aptos', 8, 'bold'), command=self.deletarcliente)
         self.apagar.place(relx=0.7, rely=0.1, relwidth=0.1, relheight=0.15)
         self.alterar = Button(self.frame1, text='Alterar', bd=2, bg='#1A2C56', fg='#FFFFFF',
-                              font=('Aptos', 8, 'bold'))
+                              font=('Aptos', 8, 'bold'), command=self.alterarcliente)
         self.alterar.place(relx=0.8, rely=0.1, relwidth=0.1, relheight=0.15)
         self.novo = Button(self.frame1, text='Novo', bg='#1A2C56', fg='#ffffff',
                            font=('Aptos', 8, 'bold'), command=self.addcliente)
@@ -152,6 +209,20 @@ class application(funcoes):
         self.list.configure(yscroll = self.scroll.set)
         self.scroll.place(relx=0.96, rely=0.01, relwidth=0.04, relheight=0.85)
         self.list.bind("<ButtonRelease-1>", self.cliqueduplo)
+    def Menus(self):
+        menubar = Menu(self.root)
+        self.root.config(menu=menubar)
+        filemenu = Menu(menubar)
+        filemenu2 = Menu(menubar)
+        filemenu3 = Menu(menubar)
+        def quit(): self.root.destroy()
+        menubar.add_cascade(label='Opções', menu= filemenu)
+        menubar.add_cascade(label= "Relatórios", menu= filemenu2 )
+        menubar.add_cascade(label='Teste', menu= filemenu3)
+        filemenu.add_command(label='Sair', command=quit)
+        filemenu.add_command(label="Limpar Cliente", command=self.limpartela)
+        filemenu2.add_command(label='Gerar PDF', command=self.gerarrelcliente)
+
 
 application()
 
