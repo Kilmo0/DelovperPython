@@ -1,1 +1,1 @@
-print('test'); print('masss bahh')
+import this
